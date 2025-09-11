@@ -91,7 +91,7 @@ export class UsersService {
       password: hashPassword,
       isActive: false,
       codeId: uuidv4(),
-      codeExpired: dayjs().add(1, 'minutes'),
+      codeExpired: dayjs().add(5, 'minutes'),
     });
 
     //trả phản hồi
