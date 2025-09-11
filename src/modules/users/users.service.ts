@@ -6,6 +6,9 @@ import { Model, Types } from 'mongoose';
 import { User } from './schemas/user.schema';
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { hashPasswordHelper } from '../../helper/util';
+import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import {v4 as uuidv4} from 'uuid'
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UsersService {
@@ -65,5 +68,37 @@ export class UsersService {
 
   async remove(id: string) {
     return await this.userModel.findByIdAndDelete(id);
+  }
+
+  async handleRegister(registerDto: CreateAuthDto) {
+    const { username, email, password } = registerDto;
+
+    //check email
+    const isExist = await this.isEmailExist(email);
+    if (isExist === true) {
+      throw new BadRequestException(
+        `Email đã tồn tại: ${email}. Vui lòng sử dụng email khác.`,
+      );
+    }
+
+    //hash password
+    const hashPassword = await hashPasswordHelper(password);
+
+    //create data user
+    const user = await this.userModel.create({
+      username,
+      email,
+      password: hashPassword,
+      isActive: false,
+      codeId: uuidv4(),
+      codeExpired: dayjs().add(1, 'minutes'),
+    });
+
+    //trả phản hồi
+    return {
+      _id: user._id,
+    };
+
+    //send email
   }
 }
