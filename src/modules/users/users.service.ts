@@ -7,12 +7,16 @@ import { User } from './schemas/user.schema';
 import { BadRequestException } from '@nestjs/common/exceptions';
 import { hashPasswordHelper } from '../../helper/util';
 import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
-import {v4 as uuidv4} from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly mailService: MailService,
+  ) {}
 
   async findByEmail(email: string) {
     return await this.userModel.findOne({ email });
@@ -94,11 +98,36 @@ export class UsersService {
       codeExpired: dayjs().add(5, 'minutes'),
     });
 
+    //send email
+    if (!user.codeId) {
+      throw new Error('CodeId không tồn tại');
+    }
+    await this.mailService.sendActivationEmail(email, user.codeId);
+
     //trả phản hồi
     return {
       _id: user._id,
     };
+  }
 
-    //send email
+  async activateAccount(codeId: string) {
+    const user = await this.userModel.findOne({ codeId });
+
+    if (!user) {
+      throw new BadRequestException('Code không hợp lệ');
+    }
+
+    if (user.codeExpired < new Date()) {
+      throw new BadRequestException('Code đã hết hạn');
+    }
+
+    user.isActive = true;
+    user.codeId = null;
+    await user.save();
+
+    return {
+      message: 'Tài khoản đã được kích hoạt!',
+      _id: user._id,
+    };
   }
 }
