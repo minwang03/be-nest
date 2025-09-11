@@ -11,6 +11,10 @@ import { hashPasswordHelper } from '../../helper/util';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
+  async findByEmail(email: string) {
+    return await this.userModel.findOne({ email });
+  }
+
   isEmailExist = async (email: string) => {
     const user = await this.userModel.exists({ email });
     if (user) return true;

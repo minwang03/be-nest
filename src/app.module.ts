@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
 import { ServiceProxyModule } from './modules/service-proxy/service-proxy.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ServiceProxyModule } from './modules/service-proxy/service-proxy.module
     }),
     UsersModule,
     ServiceProxyModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
