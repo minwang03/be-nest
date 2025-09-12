@@ -8,6 +8,8 @@ import { ServiceProxyModule } from '@/modules/service-proxy/service-proxy.module
 import { AuthModule } from '@/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from '@/auth/passport/jwt-auth.guard';
+import { ProxyListModule } from './modules/proxy-list/proxy-list.module';
+import { LocationModule } from './modules/location/location.module';
 
 
 @Module({
@@ -23,6 +25,8 @@ import { JwtAuthGuard } from '@/auth/passport/jwt-auth.guard';
     UsersModule,
     ServiceProxyModule,
     AuthModule,
+    ProxyListModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [
