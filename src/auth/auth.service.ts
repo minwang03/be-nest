@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersService } from 'src/modules/users/users.service';
 import { comparePasswordHelper } from '../helper/util';
 import { JwtService } from '@nestjs/jwt';
@@ -11,18 +11,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Email không tồn tại');
-
-    const isMatch = await comparePasswordHelper(password, user.password);
-    if (!isMatch) throw new UnauthorizedException('Sai mật khẩu');
-
+  async validateUser(username: string, password: string) {
+    const user = await this.usersService.findByEmail(username);
+    if (!user) return null;
+    const isValidPassword = await comparePasswordHelper(
+      password,
+      user.password,
+    );
+    if (!isValidPassword) return null;
     return user;
   }
 
   async login(user: any) {
-    const payload = { sub: user._id, role: user.role };
+    const payload = { sub: user._id, role: user.role, username: user.email };
     return {
       access_token: this.jwtService.sign(payload),
     };
