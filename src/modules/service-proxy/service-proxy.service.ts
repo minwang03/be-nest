@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateServiceProxyDto } from './dto/create-service-proxy.dto';
-import { UpdateServiceProxyDto } from './dto/update-service-proxy.dto';
+import { CreateServiceProxyDto } from '@/modules/service-proxy/dto/create-service-proxy.dto';
+import { UpdateServiceProxyDto } from '@/modules/service-proxy/dto/update-service-proxy.dto';
 
 @Injectable()
 export class ServiceProxyService {

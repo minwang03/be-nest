@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from '@/modules/users/dto/create-user.dto';
+import { UpdateUserDto } from '@/modules/users/dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User } from './schemas/user.schema';
+import { User } from '@/modules/users/schemas/user.schema';
 import { BadRequestException } from '@nestjs/common/exceptions';
-import { hashPasswordHelper } from '../../helper/util';
-import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { hashPasswordHelper } from '@/helper/util';
+import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
-import { MailService } from 'src/mail/mail.service';
+import { MailService } from '@/mail/mail.service';
 
 @Injectable()
 export class UsersService {

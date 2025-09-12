@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ServiceProxyService } from './service-proxy.service';
-import { CreateServiceProxyDto } from './dto/create-service-proxy.dto';
-import { UpdateServiceProxyDto } from './dto/update-service-proxy.dto';
+import { ServiceProxyService } from '@/modules/service-proxy/service-proxy.service';
+import { CreateServiceProxyDto } from '@/modules/service-proxy/dto/create-service-proxy.dto';
+import { UpdateServiceProxyDto } from '@/modules/service-proxy/dto/update-service-proxy.dto';
 
 @Controller('service-proxy')
 export class ServiceProxyController {

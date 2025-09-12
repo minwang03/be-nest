@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ServiceProxyService } from './service-proxy.service';
-import { ServiceProxyController } from './service-proxy.controller';
+import { ServiceProxyService } from '@/modules/service-proxy/service-proxy.service';
+import { ServiceProxyController } from '@/modules/service-proxy/service-proxy.controller';
 import {
   ServiceProxy,
   ServiceProxySchema,
-} from './schemas/service-proxy.schema';
+} from '@/modules/service-proxy/schemas/service-proxy.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
