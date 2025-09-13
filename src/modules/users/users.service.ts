@@ -56,11 +56,11 @@ export class UsersService {
   }
 
   async findAll() {
-    return await this.userModel.find().select('-password');
+    return await this.userModel.find().select('-password').exec();
   }
 
   async findOne(id: string) {
-    return await this.userModel.findById(id).select('-password');
+    return await this.userModel.findById(id).select('-password').exec();
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
@@ -71,7 +71,7 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    return await this.userModel.findByIdAndDelete(id);
+    return await this.userModel.findByIdAndDelete(id).exec();
   }
 
   async handleRegister(registerDto: CreateAuthDto) {

@@ -10,6 +10,9 @@ export class ServiceProxy {
 
  @Prop()
   proxyType: string;
+
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const ServiceProxySchema = SchemaFactory.createForClass(ServiceProxy);
