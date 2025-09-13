@@ -11,6 +11,7 @@ import { JwtAuthGuard } from '@/auth/passport/jwt-auth.guard';
 import { ProxyListModule } from './modules/proxy-list/proxy-list.module';
 import { LocationModule } from './modules/location/location.module';
 import { PackageProxyModule } from './modules/package-proxy/package-proxy.module';
+import { IpProxyModule } from './modules/ip-proxy/ip-proxy.module';
 
 
 @Module({
@@ -29,6 +30,7 @@ import { PackageProxyModule } from './modules/package-proxy/package-proxy.module
     ProxyListModule,
     LocationModule,
     PackageProxyModule,
+    IpProxyModule,
   ],
   controllers: [AppController],
   providers: [
