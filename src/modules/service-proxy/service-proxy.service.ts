@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateServiceProxyDto } from '@/modules/service-proxy/dto/create-service-proxy.dto';
 import { UpdateServiceProxyDto } from '@/modules/service-proxy/dto/update-service-proxy.dto';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ServiceProxy } from '@/modules/service-proxy/schemas/service-proxy.schema';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -33,8 +33,11 @@ export class ServiceProxyService {
     return await this.serviceProxyModel.findById(id).exec();
   }
 
-  update(id: string, updateServiceProxyDto: UpdateServiceProxyDto) {
-    return `This action updates a #${id} serviceProxy`;
+  async update(id: string, updateServiceProxyDto: UpdateServiceProxyDto) {
+    return await this.serviceProxyModel.updateOne(
+      { _id: new Types.ObjectId(id) },
+      { $set: updateServiceProxyDto },
+    );
   }
 
   async remove(id: string) {
