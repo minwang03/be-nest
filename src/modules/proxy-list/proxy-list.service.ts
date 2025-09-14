@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProxyListDto } from '@/modules/proxy-list/dto/create-proxy-list.dto';
 import { UpdateProxyListDto } from '@/modules/proxy-list/dto/update-proxy-list.dto';
+import { ProxyList } from './schemas/proxy-list.schema';
+import { Model, Types } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class ProxyListService {
-  create(createProxyListDto: CreateProxyListDto) {
-    return 'This action adds a new proxyList';
+  constructor(
+    @InjectModel(ProxyList.name) private proxyListModel: Model<ProxyList>,
+  ) {}
+
+  async create(createProxyListDto: CreateProxyListDto) {
+    const { name, note } = createProxyListDto;
+
+    const proxyList = await this.proxyListModel.create({
+      name,
+      note,
+    });
+
+    return {
+      _id: proxyList.id,
+    };
   }
 
-  findAll() {
-    return `This action returns all proxyList`;
+  async findAll() {
+    return await this.proxyListModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} proxyList`;
+  async findOne(id: string) {
+    return await this.proxyListModel.findById(id).exec();
   }
 
-  update(id: number, updateProxyListDto: UpdateProxyListDto) {
-    return `This action updates a #${id} proxyList`;
+  async update(id: string, updateProxyListDto: UpdateProxyListDto) {
+    return await this.proxyListModel.updateOne(
+      { _id: new Types.ObjectId(id) },
+      { $set: updateProxyListDto },
+    );
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} proxyList`;
+  async remove(id: string) {
+    return await this.proxyListModel.findByIdAndDelete(id).exec();
   }
 }

@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { LocationService } from '@/modules/location/location.service';
 import { CreateLocationDto } from '@/modules/location/dto/create-location.dto';
 import { UpdateLocationDto } from '@/modules/location/dto/update-location.dto';
+import { Public } from '@/decorator/customize';
 
+@Public()
 @Controller('location')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
@@ -19,16 +21,16 @@ export class LocationController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.locationService.findOne(+id);
+    return this.locationService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateLocationDto: UpdateLocationDto) {
-    return this.locationService.update(+id, updateLocationDto);
+    return this.locationService.update(id, updateLocationDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.locationService.remove(+id);
+    return this.locationService.remove(id);
   }
 }

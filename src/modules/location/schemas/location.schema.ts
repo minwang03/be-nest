@@ -7,6 +7,9 @@ export type LocationDocument = HydratedDocument<Location>;
 export class Location {
   @Prop()
   name: string;
+
+  @Prop()
+  code: string;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);

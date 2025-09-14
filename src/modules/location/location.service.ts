@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { CreateLocationDto } from '@/modules/location/dto/create-location.dto';
 import { UpdateLocationDto } from '@/modules/location/dto/update-location.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Location } from './schemas/location.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class LocationService {
-  create(createLocationDto: CreateLocationDto) {
-    return 'This action adds a new location';
+  constructor(
+    @InjectModel(Location.name) private locationModel: Model<Location>,
+  ) {}
+
+  async create(createLocationDto: CreateLocationDto) {
+    const { name, code } = createLocationDto;
+
+    const location = await this.locationModel.create({
+      name,
+      code,
+    });
+
+    return {
+      _id: location.id,
+    };
   }
 
-  findAll() {
-    return `This action returns all location`;
+  async findAll() {
+    return await this.locationModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} location`;
+  async findOne(id: string) {
+    return await this.locationModel.findById(id).exec();
   }
 
-  update(id: number, updateLocationDto: UpdateLocationDto) {
-    return `This action updates a #${id} location`;
+  async update(id: string, updateLocationDto: UpdateLocationDto) {
+    return await this.locationModel.updateOne(
+      { _id: id },
+      { $set: updateLocationDto },
+    );
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} location`;
+  async remove(id: string) {
+    return await this.locationModel.findByIdAndDelete(id).exec();
   }
 }

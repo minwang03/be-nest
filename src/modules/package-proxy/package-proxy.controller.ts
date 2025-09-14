@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PackageProxyService } from '@/modules/package-proxy/package-proxy.service';
 import { CreatePackageProxyDto } from '@/modules/package-proxy/dto/create-package-proxy.dto';
 import { UpdatePackageProxyDto } from '@/modules/package-proxy/dto/update-package-proxy.dto';
+import { Public } from '@/decorator/customize';
 
+@Public()
 @Controller('package-proxy')
 export class PackageProxyController {
   constructor(private readonly packageProxyService: PackageProxyService) {}
@@ -19,16 +21,16 @@ export class PackageProxyController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.packageProxyService.findOne(+id);
+    return this.packageProxyService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePackageProxyDto: UpdatePackageProxyDto) {
-    return this.packageProxyService.update(+id, updatePackageProxyDto);
+    return this.packageProxyService.update(id, updatePackageProxyDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.packageProxyService.remove(+id);
+    return this.packageProxyService.remove(id);
   }
 }
