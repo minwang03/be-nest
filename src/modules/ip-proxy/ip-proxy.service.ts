@@ -11,7 +11,7 @@ export class IpProxyService {
     @InjectModel(IpProxy.name) private proxyListModel: Model<IpProxy>,
   ) {}
 
-  create(createIpProxyDto: CreateIpProxyDto) {
+  async create(createIpProxyDto: CreateIpProxyDto) {
     return 'This action adds a new ipProxy';
   }
 
@@ -23,11 +23,11 @@ export class IpProxyService {
     return await this.proxyListModel.findById(id).exec();
   }
 
-  update(id: string, updateIpProxyDto: UpdateIpProxyDto) {
+  async update(id: string, updateIpProxyDto: UpdateIpProxyDto) {
     return `This action updates a #${id} ipProxy`;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} ipProxy`;
+  async remove(id: string) {
+    return await this.proxyListModel.findByIdAndDelete(id).exec();
   }
 }
