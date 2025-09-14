@@ -1,26 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { CreateIpProxyDto } from '@/modules/ip-proxy/dto/create-ip-proxy.dto';
 import { UpdateIpProxyDto } from '@/modules/ip-proxy/dto/update-ip-proxy.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { IpProxy } from '@/modules/ip-proxy/schemas/ip-proxy.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class IpProxyService {
+  constructor(
+    @InjectModel(IpProxy.name) private proxyListModel: Model<IpProxy>,
+  ) {}
+
   create(createIpProxyDto: CreateIpProxyDto) {
     return 'This action adds a new ipProxy';
   }
 
-  findAll() {
-    return `This action returns all ipProxy`;
+  async findAll() {
+    return await this.proxyListModel.find().exec();
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} ipProxy`;
   }
 
-  update(id: number, updateIpProxyDto: UpdateIpProxyDto) {
+  update(id: string, updateIpProxyDto: UpdateIpProxyDto) {
     return `This action updates a #${id} ipProxy`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} ipProxy`;
   }
 }

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { IpProxyService } from '@/modules/ip-proxy/ip-proxy.service';
 import { CreateIpProxyDto } from '@/modules/ip-proxy/dto/create-ip-proxy.dto';
 import { UpdateIpProxyDto } from '@/modules/ip-proxy/dto/update-ip-proxy.dto';
@@ -19,16 +27,16 @@ export class IpProxyController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.ipProxyService.findOne(+id);
+    return this.ipProxyService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateIpProxyDto: UpdateIpProxyDto) {
-    return this.ipProxyService.update(+id, updateIpProxyDto);
+    return this.ipProxyService.update(id, updateIpProxyDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.ipProxyService.remove(+id);
+    return this.ipProxyService.remove(id);
   }
 }
