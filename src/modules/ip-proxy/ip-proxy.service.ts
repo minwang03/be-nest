@@ -19,8 +19,8 @@ export class IpProxyService {
     return await this.proxyListModel.find().exec();
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} ipProxy`;
+  async findOne(id: string) {
+    return await this.proxyListModel.findById(id).exec();
   }
 
   update(id: string, updateIpProxyDto: UpdateIpProxyDto) {
