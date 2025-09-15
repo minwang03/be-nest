@@ -12,6 +12,7 @@ import { ProxyListModule } from '@/modules/proxy-list/proxy-list.module';
 import { LocationModule } from '@/modules/location/location.module';
 import { PackageProxyModule } from '@/modules/package-proxy/package-proxy.module';
 import { IpProxyModule } from '@/modules/ip-proxy/ip-proxy.module';
+import { OrderModule } from './modules/order/order.module';
 
 
 @Module({
@@ -31,6 +32,7 @@ import { IpProxyModule } from '@/modules/ip-proxy/ip-proxy.module';
     LocationModule,
     PackageProxyModule,
     IpProxyModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [
