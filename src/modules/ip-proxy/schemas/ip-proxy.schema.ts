@@ -14,6 +14,9 @@ export class IpProxy {
   @Prop()
   port: number;
 
+  @Prop({ default: true })
+  isActive: boolean;
+
   @Prop({ type: Types.ObjectId, ref: PackageProxy.name })
   packageProxy: Types.ObjectId;
 

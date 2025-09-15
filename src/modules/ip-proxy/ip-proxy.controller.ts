@@ -10,7 +10,9 @@ import {
 import { IpProxyService } from '@/modules/ip-proxy/ip-proxy.service';
 import { CreateIpProxyDto } from '@/modules/ip-proxy/dto/create-ip-proxy.dto';
 import { UpdateIpProxyDto } from '@/modules/ip-proxy/dto/update-ip-proxy.dto';
+import { Public } from '@/decorator/customize';
 
+@Public()
 @Controller('ip-proxy')
 export class IpProxyController {
   constructor(private readonly ipProxyService: IpProxyService) {}
