@@ -29,18 +29,13 @@ export class OrderService {
     const { user, packageProxy, quantity, status, detailTemplate, location } =
       createOrderDto;
 
-    // lấy package
-    const pkg = await this.packageProxyModel.findById(packageProxy).exec();
-    if (!pkg) throw new BadRequestException('Package không tồn tại');
+    const pkg = await this.validateAndGetPackage(packageProxy);
+    const sumcost = this.calculateTotalCost(pkg.cost, quantity);
 
-    // tính tổng tiền (server side)
-    const sumcost = pkg.cost * quantity;
-
-    // tạo order và lưu template
-    const order = await this.orderModel.create({
-      user: new Types.ObjectId(user),
-      packageProxy: new Types.ObjectId(packageProxy),
-      location: new Types.ObjectId(location),
+    const order = await this.createOrderRecord({
+      user,
+      packageProxy,
+      location,
       quantity,
       sumcost,
       status: status || OrderStatus.PENDING,
@@ -51,61 +46,105 @@ export class OrderService {
   }
 
   async updateStatus(id: string, status: OrderStatus) {
-    const order = await this.orderModel.findById(id).exec();
-    if (!order) throw new NotFoundException(`Order ${id} not found`);
+    const order = await this.findOrderById(id);
 
-    // đổi trang thái thành đã trả (paid)
     if (status === OrderStatus.PAID && order.status !== OrderStatus.PAID) {
-      // lấy package để lấy giá
-      const pkg = await this.packageProxyModel
-        .findById(order.packageProxy)
-        .exec();
-      if (!pkg) throw new BadRequestException('Package không tồn tại');
-
-      // lấy IP available
-      const ips = await this.ipProxyModel
-        .find({
-          packageProxy: order.packageProxy,
-          isActive: false,
-          location: order.location,
-        })
-        .limit(order.quantity);
-
-      if (ips.length < order.quantity) {
-        throw new BadRequestException('Không đủ IP khả dụng');
-      }
-
-      const template = order.detailTemplate || {};
-      const details = ips.map((ip) => ({
-        order: order._id,
-        ipProxy: ip._id,
-        protocol: template.protocol,
-        autochangeIP: !!template.autochangeIP,
-        proxysecurity: template.proxysecurity,
-        allowedIP: template.allowedIP,
-        allowedUser: template.allowedUser,
-        allowedPass: template.allowedPass,
-        autoextent: !!template.autoextent,
-        note: template.note,
-        cost: pkg.cost,
-        sumcost: pkg.cost,
-        expiry_date: pkg.expiry,
-      }));
-
-      // insert details
-      await this.orderDetailModel.insertMany(details);
-
-      // đánh dấu tránh cấp trùng
-      const ipIds = ips.map((i) => i._id);
-      await this.ipProxyModel.updateMany(
-        { _id: { $in: ipIds } },
-        { $set: { isActive: true, assignedOrder: order._id } },
-      );
+      await this.processPaymentStatus(order);
     }
 
     order.status = status;
     await order.save();
     return order;
+  }
+
+  private async validateAndGetPackage(packageProxyId: string) {
+    const pkg = await this.packageProxyModel.findById(packageProxyId).exec();
+    if (!pkg) {
+      throw new BadRequestException('Package không tồn tại');
+    }
+    return pkg;
+  }
+
+  private calculateTotalCost(cost: number, quantity: number): number {
+    return cost * quantity;
+  }
+
+  private async createOrderRecord(orderData: any) {
+    return await this.orderModel.create({
+      user: Types.ObjectId.createFromHexString(orderData.user),
+      packageProxy: Types.ObjectId.createFromHexString(orderData.packageProxy),
+      location: Types.ObjectId.createFromHexString(orderData.location),
+      quantity: orderData.quantity,
+      sumcost: orderData.sumcost,
+      status: orderData.status,
+      detailTemplate: orderData.detailTemplate,
+    });
+  }
+
+  private async findOrderById(id: string) {
+    const order = await this.orderModel.findById(id).exec();
+    if (!order) {
+      throw new NotFoundException(`Order ${id} not found`);
+    }
+    return order;
+  }
+
+  private async processPaymentStatus(order: any) {
+    const pkg = await this.validateAndGetPackage(order.packageProxy);
+    const availableIps = await this.getAvailableIps(order);
+
+    if (availableIps.length < order.quantity) {
+      throw new BadRequestException(
+        `Không đủ IP khả dụng. Cần: ${order.quantity}, Có sẵn: ${availableIps.length}`,
+      );
+    }
+
+    const orderDetails = this.buildOrderDetails(availableIps, order, pkg);
+    await this.createOrderDetails(orderDetails);
+    await this.markIpsAsAssigned(availableIps, order._id);
+  }
+
+  private async getAvailableIps(order: any) {
+    return await this.ipProxyModel
+      .find({
+        packageProxy: order.packageProxy,
+        isActive: false,
+        location: order.location,
+      })
+      .limit(order.quantity);
+  }
+
+  private buildOrderDetails(ips: any[], order: any, pkg: any) {
+    const template = order.detailTemplate || {};
+
+    return ips.map((ip) => ({
+      order: order._id,
+      ipProxy: ip._id,
+      protocol: template.protocol,
+      autochangeIP: !!template.autochangeIP,
+      proxysecurity: template.proxysecurity,
+      allowedIP: template.allowedIP,
+      allowedUser: template.allowedUser,
+      allowedPass: template.allowedPass,
+      autoextent: !!template.autoextent,
+      note: template.note,
+      cost: pkg.cost,
+      sumcost: pkg.cost,
+      expiry_date: pkg.expiry,
+    }));
+  }
+
+  private async createOrderDetails(details: any[]) {
+    await this.orderDetailModel.insertMany(details);
+  }
+
+  private async markIpsAsAssigned(ips: any[], orderId: string) {
+    const ipIds = ips.map((ip) => ip._id);
+
+    await this.ipProxyModel.updateMany(
+      { _id: { $in: ipIds } },
+      { $set: { isActive: true, assignedOrder: orderId } },
+    );
   }
 
   async findAll() {
