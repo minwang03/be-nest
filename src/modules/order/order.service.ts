@@ -148,14 +148,14 @@ export class OrderService {
   }
 
   // Hàm tạo order detail cho từng IP dựa trên template
-  private buildOrderDetails(
+  private async createOrderDetailsFromTemplate(
     ips: IpProxyDocument[],
     order: OrderDocument,
     pkg: PackageProxyDocument,
-  ): Partial<OrderDetail>[] {
+  ) {
     const template = order.detailTemplate || {};
 
-    return ips.map((ip) => ({
+    const details = ips.map((ip) => ({
       order: order._id,
       ipProxy: ip._id,
       protocol: template.protocol,
@@ -170,10 +170,7 @@ export class OrderService {
       sumcost: pkg.cost,
       expiry_date: pkg.expiry,
     }));
-  }
 
-  // Hàm insert OrderDetail vào DB
-  private async createOrderDetails(details: Partial<OrderDetail>[]) {
     await this.orderDetailModel.insertMany(details);
   }
 
@@ -206,9 +203,8 @@ export class OrderService {
       );
     }
 
-    // 4. Tạo order detail cho từng IP (OrderDetail)
-    const orderDetails = this.buildOrderDetails(availableIps, order, pkg);
-    await this.createOrderDetails(orderDetails);
+    // 4. Tạo order detail cho từng IP 
+    await this.createOrderDetailsFromTemplate(availableIps, order, pkg);
 
     // 5. Đánh dấu IP đã được cấp
     await this.markIpsAsAssigned(availableIps, order._id);
