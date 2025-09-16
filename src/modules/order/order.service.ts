@@ -127,6 +127,7 @@ export class OrderService {
         location: order.location,
       })
       .limit(order.quantity)
+      .lean()
       .exec();
   }
 
@@ -173,7 +174,7 @@ export class OrderService {
     );
   }
 
-  // ======= PROCCESS PAYMENT (PAID)  =======
+  // ========= PROCCESS PAYMENT (PAID)  =========
 
   private async processPaymentStatus(order: OrderDocument) {
     // 1. Lấy package gắn vào order
@@ -189,7 +190,7 @@ export class OrderService {
       );
     }
 
-    // 4. Tạo chi tiết order cho từng IP (OrderDetail)
+    // 4. Tạo order detail cho từng IP (OrderDetail)
     const orderDetails = this.buildOrderDetails(availableIps, order, pkg);
     await this.createOrderDetails(orderDetails);
 
