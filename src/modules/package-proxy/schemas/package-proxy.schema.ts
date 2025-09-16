@@ -10,7 +10,7 @@ export class PackageProxy {
   name: string;
 
   @Prop()
-  expiry: string;
+  expiry: number;
 
   @Prop()
   cost: number;

@@ -13,6 +13,7 @@ import { LocationModule } from '@/modules/location/location.module';
 import { PackageProxyModule } from '@/modules/package-proxy/package-proxy.module';
 import { IpProxyModule } from '@/modules/ip-proxy/ip-proxy.module';
 import { OrderModule } from './modules/order/order.module';
+import { OrderDetailModule } from './modules/order-detail/order-detail.module';
 
 
 @Module({
@@ -33,6 +34,7 @@ import { OrderModule } from './modules/order/order.module';
     PackageProxyModule,
     IpProxyModule,
     OrderModule,
+    OrderDetailModule,
   ],
   controllers: [AppController],
   providers: [
