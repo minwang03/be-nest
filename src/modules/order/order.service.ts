@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import {
   CreateOrderDto,
-  OrderDetailTemplateDto,
   OrderStatus,
 } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -41,10 +40,10 @@ export class OrderService {
     const pkg = await this.validateAndGetPackage(packageProxy);
     const sumcost = this.calculateTotalCost(pkg.cost, quantity);
 
-    const order = await this.createOrderRecord({
-      user,
-      packageProxy,
-      location,
+    const order = await this.orderModel.create({
+      user: new Types.ObjectId(user),
+      packageProxy: new Types.ObjectId(packageProxy),
+      location: new Types.ObjectId(location),
       quantity,
       sumcost,
       status: status || OrderStatus.PENDING,
@@ -102,27 +101,6 @@ export class OrderService {
     return cost * quantity;
   }
 
-  // Hàm tạo record order mới trong DB
-  private async createOrderRecord(orderData: {
-    user: string;
-    packageProxy: string;
-    location: string;
-    quantity: number;
-    sumcost: number;
-    status: OrderStatus;
-    detailTemplate?: OrderDetailTemplateDto;
-  }): Promise<OrderDocument> {
-    return await this.orderModel.create({
-      user: new Types.ObjectId(orderData.user),
-      packageProxy: new Types.ObjectId(orderData.packageProxy),
-      location: new Types.ObjectId(orderData.location),
-      quantity: orderData.quantity,
-      sumcost: orderData.sumcost,
-      status: orderData.status,
-      detailTemplate: orderData.detailTemplate,
-    });
-  }
-
   // Hàm tìm order theo ID
   private async findOrderById(id: string): Promise<OrderDocument> {
     const order = await this.orderModel.findById(id).exec();
@@ -175,15 +153,12 @@ export class OrderService {
   }
 
   // Hàm đánh dấu IP đã cấp để tránh cấp trùng
-  private async markIpsAsAssigned(
-    ips: IpProxyDocument[],
-    orderId: Types.ObjectId,
-  ) {
+  private async markIpsAsAssigned(ips: IpProxyDocument[]) {
     const ipIds = ips.map((ip) => ip._id);
 
     await this.ipProxyModel.updateMany(
       { _id: { $in: ipIds } },
-      { $set: { isActive: true, assignedOrder: orderId } },
+      { $set: { isActive: true } },
     );
   }
 
@@ -203,10 +178,10 @@ export class OrderService {
       );
     }
 
-    // 4. Tạo order detail cho từng IP 
+    // 4. Tạo order detail cho từng IP
     await this.createOrderDetailsFromTemplate(availableIps, order, pkg);
 
     // 5. Đánh dấu IP đã được cấp
-    await this.markIpsAsAssigned(availableIps, order._id);
+    await this.markIpsAsAssigned(availableIps);
   }
 }

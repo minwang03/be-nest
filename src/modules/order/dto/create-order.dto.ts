@@ -3,10 +3,9 @@ import {
   IsOptional,
   IsString,
   IsEnum,
-  IsBoolean,
   ValidateNested,
-  IsNotEmpty,
 } from 'class-validator';
+import { CreateOrderDetailDto } from '@/modules/order-detail/dto/create-order-detail.dto';
 import { Type } from 'class-transformer';
 
 export enum OrderStatus {
@@ -14,38 +13,6 @@ export enum OrderStatus {
   PAID = 'paid',
   ACTIVE = 'active',
   CANCELLED = 'cancelled',
-}
-
-export class OrderDetailTemplateDto {
-  @IsString()
-  @IsNotEmpty()
-  protocol: string;
-
-  @IsBoolean()
-  autochangeIP: boolean;
-
-  @IsString()
-  @IsNotEmpty()
-  proxysecurity: string;
-
-  @IsOptional()
-  @IsString()
-  allowedIP?: string;
-
-  @IsOptional()
-  @IsString()
-  allowedUser?: string;
-
-  @IsOptional()
-  @IsString()
-  allowedPass?: string;
-
-  @IsBoolean()
-  autoextent: boolean;
-
-  @IsOptional()
-  @IsString()
-  note?: string;
 }
 
 export class CreateOrderDto {
@@ -66,7 +33,7 @@ export class CreateOrderDto {
   status: OrderStatus;
 
   @ValidateNested()
-  @Type(() => OrderDetailTemplateDto)
+  @Type(() => CreateOrderDetailDto)
   @IsOptional()
-  detailTemplate?: OrderDetailTemplateDto;
+  detailTemplate?: CreateOrderDetailDto;
 }
