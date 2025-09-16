@@ -54,6 +54,22 @@ export class OrderService {
     return { _id: order._id, status: order.status, sumcost, quantity };
   }
 
+  async findAll() {
+    return await this.orderModel.find().exec();
+  }
+
+  findOne(id: string) {
+    return `This action returns a #${id} order`;
+  }
+
+  update(id: string, updateOrderDto: UpdateOrderDto) {
+    return `This action updates a #${id} order`;
+  }
+
+  remove(id: string) {
+    return `This action removes a #${id} order`;
+  }
+
   // ====================== UPDATE STATUS ======================
 
   async updateStatus(id: string, status: OrderStatus) {
@@ -196,21 +212,5 @@ export class OrderService {
 
     // 5. Đánh dấu IP đã được cấp
     await this.markIpsAsAssigned(availableIps, order._id);
-  }
-
-  async findAll() {
-    return await this.orderModel.find().exec();
-  }
-
-  findOne(id: string) {
-    return `This action returns a #${id} order`;
-  }
-
-  update(id: string, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} order`;
   }
 }
