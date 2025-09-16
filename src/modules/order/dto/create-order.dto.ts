@@ -16,8 +16,6 @@ export enum OrderStatus {
 }
 
 export class CreateOrderDto {
-  @IsString()
-  user: string;
 
   @IsString()
   packageProxy: string;

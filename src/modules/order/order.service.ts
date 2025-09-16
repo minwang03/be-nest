@@ -3,10 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  CreateOrderDto,
-  OrderStatus,
-} from './dto/create-order.dto';
+import { CreateOrderDto, OrderStatus } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './schemas/order.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -33,15 +30,15 @@ export class OrderService {
     private packageProxyModel: Model<PackageProxyDocument>,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto) {
-    const { user, packageProxy, quantity, status, detailTemplate, location } =
+  async create(userId: string, createOrderDto: CreateOrderDto) {
+    const { packageProxy, quantity, status, detailTemplate, location } =
       createOrderDto;
 
     const pkg = await this.validateAndGetPackage(packageProxy);
     const sumcost = this.calculateTotalCost(pkg.cost, quantity);
 
     const order = await this.orderModel.create({
-      user: new Types.ObjectId(user),
+      user: new Types.ObjectId(userId),
       packageProxy: new Types.ObjectId(packageProxy),
       location: new Types.ObjectId(location),
       quantity,
