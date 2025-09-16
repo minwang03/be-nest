@@ -3,26 +3,35 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateOrderDto, OrderStatus } from './dto/create-order.dto';
+import {
+  CreateOrderDto,
+  OrderDetailTemplateDto,
+  OrderStatus,
+} from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './schemas/order.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model, Types, HydratedDocument } from 'mongoose';
 import { OrderDetail } from '../order-detail/schemas/order-detail.schema';
 import { IpProxy } from '../ip-proxy/schemas/ip-proxy.schema';
 import { PackageProxy } from '../package-proxy/schemas/package-proxy.schema';
+
+type OrderDocument = HydratedDocument<Order>;
+type IpProxyDocument = HydratedDocument<IpProxy>;
+type PackageProxyDocument = HydratedDocument<PackageProxy>;
+type OrderDetailDocument = HydratedDocument<OrderDetail>;
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name)
-    private orderModel: Model<Order>,
+    private orderModel: Model<OrderDocument>,
     @InjectModel(OrderDetail.name)
-    private orderDetailModel: Model<OrderDetail>,
+    private orderDetailModel: Model<OrderDetailDocument>,
     @InjectModel(IpProxy.name)
-    private ipProxyModel: Model<IpProxy>,
+    private ipProxyModel: Model<IpProxyDocument>,
     @InjectModel(PackageProxy.name)
-    private packageProxyModel: Model<PackageProxy>,
+    private packageProxyModel: Model<PackageProxyDocument>,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
@@ -45,6 +54,8 @@ export class OrderService {
     return { _id: order._id, status: order.status, sumcost, quantity };
   }
 
+  // ====================== UPDATE STATUS ======================
+
   async updateStatus(id: string, status: OrderStatus) {
     const order = await this.findOrderById(id);
 
@@ -57,7 +68,12 @@ export class OrderService {
     return order;
   }
 
-  private async validateAndGetPackage(packageProxyId: string) {
+  // ====================== HELPER FUNCTIONS ======================
+
+  // Hàm kiểm tra package tồn tại
+  private async validateAndGetPackage(
+    packageProxyId: string,
+  ): Promise<PackageProxyDocument> {
     const pkg = await this.packageProxyModel.findById(packageProxyId).exec();
     if (!pkg) {
       throw new BadRequestException('Package không tồn tại');
@@ -65,15 +81,25 @@ export class OrderService {
     return pkg;
   }
 
+  // Hàm tính tổng tiền order
   private calculateTotalCost(cost: number, quantity: number): number {
     return cost * quantity;
   }
 
-  private async createOrderRecord(orderData: any) {
+  // Hàm tạo record order mới trong DB
+  private async createOrderRecord(orderData: {
+    user: string;
+    packageProxy: string;
+    location: string;
+    quantity: number;
+    sumcost: number;
+    status: OrderStatus;
+    detailTemplate?: OrderDetailTemplateDto;
+  }): Promise<OrderDocument> {
     return await this.orderModel.create({
-      user: Types.ObjectId.createFromHexString(orderData.user),
-      packageProxy: Types.ObjectId.createFromHexString(orderData.packageProxy),
-      location: Types.ObjectId.createFromHexString(orderData.location),
+      user: new Types.ObjectId(orderData.user),
+      packageProxy: new Types.ObjectId(orderData.packageProxy),
+      location: new Types.ObjectId(orderData.location),
       quantity: orderData.quantity,
       sumcost: orderData.sumcost,
       status: orderData.status,
@@ -81,7 +107,8 @@ export class OrderService {
     });
   }
 
-  private async findOrderById(id: string) {
+  // Hàm tìm order theo ID
+  private async findOrderById(id: string): Promise<OrderDocument> {
     const order = await this.orderModel.findById(id).exec();
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
@@ -89,32 +116,26 @@ export class OrderService {
     return order;
   }
 
-  private async processPaymentStatus(order: any) {
-    const pkg = await this.validateAndGetPackage(order.packageProxy);
-    const availableIps = await this.getAvailableIps(order);
-
-    if (availableIps.length < order.quantity) {
-      throw new BadRequestException(
-        `Không đủ IP khả dụng. Cần: ${order.quantity}, Có sẵn: ${availableIps.length}`,
-      );
-    }
-
-    const orderDetails = this.buildOrderDetails(availableIps, order, pkg);
-    await this.createOrderDetails(orderDetails);
-    await this.markIpsAsAssigned(availableIps, order._id);
-  }
-
-  private async getAvailableIps(order: any) {
+  // Hàm lấy danh sách IP khả dụng cho order
+  private async getAvailableIps(
+    order: OrderDocument,
+  ): Promise<IpProxyDocument[]> {
     return await this.ipProxyModel
       .find({
         packageProxy: order.packageProxy,
         isActive: false,
         location: order.location,
       })
-      .limit(order.quantity);
+      .limit(order.quantity)
+      .exec();
   }
 
-  private buildOrderDetails(ips: any[], order: any, pkg: any) {
+  // Hàm tạo order detail cho từng IP dựa trên template
+  private buildOrderDetails(
+    ips: IpProxyDocument[],
+    order: OrderDocument,
+    pkg: PackageProxyDocument,
+  ): Partial<OrderDetail>[] {
     const template = order.detailTemplate || {};
 
     return ips.map((ip) => ({
@@ -134,17 +155,46 @@ export class OrderService {
     }));
   }
 
-  private async createOrderDetails(details: any[]) {
+  // Hàm insert OrderDetail vào DB
+  private async createOrderDetails(details: Partial<OrderDetail>[]) {
     await this.orderDetailModel.insertMany(details);
   }
 
-  private async markIpsAsAssigned(ips: any[], orderId: string) {
+  // Hàm đánh dấu IP đã cấp để tránh cấp trùng
+  private async markIpsAsAssigned(
+    ips: IpProxyDocument[],
+    orderId: Types.ObjectId,
+  ) {
     const ipIds = ips.map((ip) => ip._id);
 
     await this.ipProxyModel.updateMany(
       { _id: { $in: ipIds } },
       { $set: { isActive: true, assignedOrder: orderId } },
     );
+  }
+
+  // ======= PROCCESS PAYMENT (PAID)  =======
+
+  private async processPaymentStatus(order: OrderDocument) {
+    // 1. Lấy package gắn vào order
+    const pkg = await this.validateAndGetPackage(order.packageProxy.toString());
+
+    // 2. Lấy IP khả dụng tương package và location
+    const availableIps = await this.getAvailableIps(order);
+
+    // 3. Kiểm tra có đủ IP cho order không
+    if (availableIps.length < order.quantity) {
+      throw new BadRequestException(
+        `Không đủ IP khả dụng. Cần: ${order.quantity}, Có sẵn: ${availableIps.length}`,
+      );
+    }
+
+    // 4. Tạo chi tiết order cho từng IP (OrderDetail)
+    const orderDetails = this.buildOrderDetails(availableIps, order, pkg);
+    await this.createOrderDetails(orderDetails);
+
+    // 5. Đánh dấu IP đã được cấp
+    await this.markIpsAsAssigned(availableIps, order._id);
   }
 
   async findAll() {
