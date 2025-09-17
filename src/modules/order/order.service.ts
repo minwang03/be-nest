@@ -68,6 +68,7 @@ export class OrderService {
 
   // ====================== UPDATE STATUS ======================
 
+  // Hàm cập nhật trạng thái
   async updateStatus(id: string, status: OrderStatus) {
     const order = await this.findOrderById(id);
 
@@ -161,11 +162,12 @@ export class OrderService {
 
   // ========= PROCCESS PAYMENT (PAID)  =========
 
+  // Hàm sử lý quy trình chuyển trạng thái
   private async processPaymentStatus(order: OrderDocument) {
     // 1. Lấy package gắn vào order
     const pkg = await this.validateAndGetPackage(order.packageProxy.toString());
 
-    // 2. Lấy IP khả dụng tương package và location
+    // 2. Lấy IP khả dụng tương ứng với package và location
     const availableIps = await this.getAvailableIps(order);
 
     // 3. Kiểm tra có đủ IP cho order không
