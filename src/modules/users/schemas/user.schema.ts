@@ -20,6 +20,9 @@ export class User {
   @Prop()
   phone: string;
 
+  @Prop()
+  balance: number;
+
   @Prop({ default: false })
   isActive: boolean;
 

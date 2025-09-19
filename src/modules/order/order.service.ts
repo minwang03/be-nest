@@ -11,6 +11,7 @@ import { Model, Types, HydratedDocument } from 'mongoose';
 import { OrderDetail } from '../order-detail/schemas/order-detail.schema';
 import { IpProxy } from '../ip-proxy/schemas/ip-proxy.schema';
 import { PackageProxy } from '../package-proxy/schemas/package-proxy.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
 
 type OrderDocument = HydratedDocument<Order>;
 type IpProxyDocument = HydratedDocument<IpProxy>;
@@ -28,6 +29,8 @@ export class OrderService {
     private ipProxyModel: Model<IpProxyDocument>,
     @InjectModel(PackageProxy.name)
     private packageProxyModel: Model<PackageProxyDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
   ) {}
 
   async create(userId: string, createOrderDto: CreateOrderDto) {
@@ -82,6 +85,24 @@ export class OrderService {
   }
 
   // ====================== HELPER FUNCTIONS ======================
+
+  private async deductUserBalance(userId: string, amount: number) {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User ${userId} not found`);
+    }
+
+    if (user.balance < amount) {
+      throw new BadRequestException(
+        'Số dư không đủ để thanh toán đơn hàng này',
+      );
+    }
+
+    user.balance -= amount;
+    await user.save();
+
+    return user;
+  }
 
   // Hàm kiểm tra package tồn tại
   private async validateAndGetPackage(
@@ -164,23 +185,29 @@ export class OrderService {
 
   // Hàm sử lý quy trình chuyển trạng thái
   private async processPaymentStatus(order: OrderDocument) {
-    // 1. Lấy package gắn vào order
-    const pkg = await this.validateAndGetPackage(order.packageProxy.toString());
-
-    // 2. Lấy IP khả dụng tương ứng với package và location
+    // 1. Lấy IP khả dụng tương ứng với package và location
     const availableIps = await this.getAvailableIps(order);
 
-    // 3. Kiểm tra có đủ IP cho order không
+    // 2. Kiểm tra có đủ IP cho order không
     if (availableIps.length < order.quantity) {
       throw new BadRequestException(
         `Không đủ IP khả dụng. Cần: ${order.quantity}, Có sẵn: ${availableIps.length}`,
       );
     }
 
-    // 4. Tạo order detail cho từng IP
+    // 3. Kiểm tra và trừ tiền của user
+    const user = await this.deductUserBalance(
+      order.user.toString(),
+      order.sumcost,
+    );
+
+    // 4. Lấy package gắn vào order
+    const pkg = await this.validateAndGetPackage(order.packageProxy.toString());
+
+    // 5. Tạo order detail cho từng IP
     await this.createOrderDetailsFromTemplate(availableIps, order, pkg);
 
-    // 5. Đánh dấu IP đã được cấp
+    // 6. Đánh dấu IP đã được cấp
     await this.markIpsAsAssigned(availableIps);
   }
 }
