@@ -86,18 +86,23 @@ export class OrderService {
 
   // ====================== HELPER FUNCTIONS ======================
 
-  private async deductUserBalance(userId: string, amount: number) {
+  // Hàm kiểm tra số dư
+  private async checkUserBalance(userId: string, amount: number) {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException(`User ${userId} not found`);
     }
 
     if (user.balance < amount) {
-      throw new BadRequestException(
-        'Số dư không đủ để thanh toán đơn hàng này',
-      );
+      throw new BadRequestException('Số dư không đủ để thực hiện giao dịch');
     }
 
+    return user;
+  }
+
+  // Hàm trừ tiền
+  async deductUserBalance(userId: string, amount: number) {
+    const user = await this.checkUserBalance(userId, amount); 
     user.balance -= amount;
     await user.save();
 
