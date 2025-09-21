@@ -40,10 +40,15 @@ export class OrderService {
     const pkg = await this.validateAndGetPackage(packageProxy);
     const sumcost = this.calculateTotalCost(pkg.cost, quantity);
 
+    let locationValue: string | Types.ObjectId = location;
+    if (location && location !== 'random') {
+      locationValue = new Types.ObjectId(location);
+    }
+
     const order = await this.orderModel.create({
       user: new Types.ObjectId(userId),
       packageProxy: new Types.ObjectId(packageProxy),
-      location: new Types.ObjectId(location),
+      location: locationValue,
       quantity,
       sumcost,
       status: status || OrderStatus.PENDING,
@@ -102,7 +107,7 @@ export class OrderService {
 
   // Hàm trừ tiền
   async deductUserBalance(userId: string, amount: number) {
-    const user = await this.checkUserBalance(userId, amount); 
+    const user = await this.checkUserBalance(userId, amount);
     user.balance -= amount;
     await user.save();
 
@@ -143,6 +148,18 @@ export class OrderService {
         packageProxy: order.packageProxy,
         isActive: false,
         location: order.location,
+      })
+      .limit(order.quantity)
+      .lean()
+      .exec();
+  }
+
+  // Hàm lấy danh sách IP cho order
+  private async getRandomIps(order: OrderDocument): Promise<IpProxyDocument[]> {
+    return await this.ipProxyModel
+      .find({
+        packageProxy: order.packageProxy,
+        isActive: false,
       })
       .limit(order.quantity)
       .lean()
@@ -190,8 +207,14 @@ export class OrderService {
 
   // Hàm sử lý quy trình chuyển trạng thái
   private async processPaymentStatus(order: OrderDocument) {
-    // 1. Lấy IP khả dụng tương ứng với package và location
-    const availableIps = await this.getAvailableIps(order);
+    let availableIps: IpProxyDocument[] = [];
+
+    // 1. Check location
+    if (order.location && order.location.toString() !== 'random') {
+      availableIps = await this.getAvailableIps(order);
+    } else {
+      availableIps = await this.getRandomIps(order);
+    }
 
     // 2. Kiểm tra có đủ IP cho order không
     if (availableIps.length < order.quantity) {
@@ -200,7 +223,7 @@ export class OrderService {
       );
     }
 
-    // 3. Kiểm tra và trừ tiền của user
+    // 3. Kiểm tra số dư và trừ tiền của user
     const user = await this.deductUserBalance(
       order.user.toString(),
       order.sumcost,
