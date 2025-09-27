@@ -16,7 +16,7 @@ export class MailService {
   }
 
   async sendActivationEmail(to: string, codeId: string) {
-    const url = `${process.env.APP_URL}/auth/activate/${codeId}`;
+    const url = `${process.env.APP_URL}/api/auth/activate/${codeId}`;
 
     await this.transporter.sendMail({
       from: `"MyApp" <${process.env.MAIL_USER}>`,
