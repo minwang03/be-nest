@@ -105,7 +105,7 @@ export class UsersService {
     await this.mailService.sendActivationEmail(email, user.codeId);
 
     return {
-      _message:
+      message:
         'Đăng ký thành công. Vui lòng kiểm tra email để kích hoạt tài khoản.',
     };
   }
