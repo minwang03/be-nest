@@ -20,9 +20,9 @@ export class ServiceProxyController {
   }
 
   @Public()
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.serviceProxyService.findOne(id);
+  @Get(':slug')
+  findOne(@Param('slug') slug: string) {
+    return this.serviceProxyService.findOne(slug);
   }
 
   @Patch(':id')

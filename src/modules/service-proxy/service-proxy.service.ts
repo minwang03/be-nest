@@ -29,8 +29,8 @@ export class ServiceProxyService {
     return await this.serviceProxyModel.find().exec();
   }
 
-  async findOne(id: string) {
-    return await this.serviceProxyModel.findById(id).exec();
+  async findOne(slug: string) {
+    return await this.serviceProxyModel.findOne({ slug }).exec();
   }
 
   async update(id: string, updateServiceProxyDto: UpdateServiceProxyDto) {
