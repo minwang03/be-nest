@@ -64,7 +64,8 @@ export class UsersService {
   }
 
   async findBalanceOne(id: string) {
-    return this.userModel.findById(id).select('balance'); 
+    const user = await this.userModel.findById(id).select('balance').lean();
+    return { balance: user?.balance ?? 0 };
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
