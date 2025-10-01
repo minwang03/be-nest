@@ -63,6 +63,10 @@ export class UsersService {
     return await this.userModel.findById(id).select('-password').exec();
   }
 
+  async findBalanceOne(id: string) {
+    return this.userModel.findById(id).select('balance'); 
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto) {
     return await this.userModel.updateOne(
       { _id: new Types.ObjectId(id) },

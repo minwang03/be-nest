@@ -20,7 +20,7 @@ export class User {
   @Prop()
   phone: string;
 
-  @Prop()
+  @Prop({ default: 0 })
   balance: number;
 
   @Prop({ default: false })
