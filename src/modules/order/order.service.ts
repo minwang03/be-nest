@@ -66,6 +66,20 @@ export class OrderService {
     return `This action returns a #${id} order`;
   }
 
+  async findOrdersWithDetails(userId: string) {
+    const orders = await this.orderModel.find({ user: userId }).lean();
+    const details = await this.orderDetailModel
+      .find({ order: { $in: orders.map((o) => o._id) } })
+      .lean();
+
+    return orders.map((order) => ({
+      ...order,
+      orderDetails: details.filter(
+        (d) => d.order.toString() === order._id.toString(),
+      ),
+    }));
+  }
+
   update(id: string, updateOrderDto: UpdateOrderDto) {
     return `This action updates a #${id} order`;
   }

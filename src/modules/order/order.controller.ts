@@ -24,6 +24,13 @@ export class OrderController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('user')
+  async findOrdersWithDetails(@Req() req: any) {
+    const userId = req.user.sub;
+    return this.orderService.findOrdersWithDetails(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() createOrderDto: CreateOrderDto, @Req() req: any) {
     const userId = req.user.sub;
