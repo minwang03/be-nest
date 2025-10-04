@@ -67,9 +67,14 @@ export class OrderService {
   }
 
   async findOrdersWithDetails(userId: string) {
-    const orders = await this.orderModel.find({ user: userId }).lean();
+    const orders = await this.orderModel
+      .find({ user: new Types.ObjectId(userId), status: 'paid' })
+      .lean();
+
+    const orderIds = orders.map((o) => new Types.ObjectId(o._id));
+
     const details = await this.orderDetailModel
-      .find({ order: { $in: orders.map((o) => o._id) } })
+      .find({ order: { $in: orderIds } })
       .lean();
 
     return orders.map((order) => ({
