@@ -12,6 +12,10 @@ import { OrderDetail } from '../order-detail/schemas/order-detail.schema';
 import { IpProxy } from '../ip-proxy/schemas/ip-proxy.schema';
 import { PackageProxy } from '../package-proxy/schemas/package-proxy.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
+import {
+  Location,
+  LocationDocument,
+} from '../location/schemas/location.schema';
 
 type OrderDocument = HydratedDocument<Order>;
 type IpProxyDocument = HydratedDocument<IpProxy>;
@@ -31,6 +35,8 @@ export class OrderService {
     private packageProxyModel: Model<PackageProxyDocument>,
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
+    @InjectModel(Location.name)
+    private locationModel: Model<LocationDocument>,
   ) {}
 
   async create(userId: string, createOrderDto: CreateOrderDto) {
@@ -77,8 +83,23 @@ export class OrderService {
       .find({ order: { $in: orderIds } })
       .lean();
 
+    const locationIds = orders
+      .map((o) => o.location)
+      .filter((loc) => loc && Types.ObjectId.isValid(loc))
+      .map((id) => new Types.ObjectId(id));
+
+    const locations = await this.locationModel
+      .find({ _id: { $in: locationIds } })
+      .lean();
+
+    const locationMap = locations.reduce<Record<string, string>>(
+      (acc, loc) => ({ ...acc, [loc._id.toString()]: loc.name }),
+      {},
+    );
+
     return orders.map((order) => ({
       ...order,
+      locationName: locationMap[order.location?.toString()] || order.location,
       orderDetails: details.filter(
         (d) => d.order.toString() === order._id.toString(),
       ),

@@ -13,6 +13,7 @@ import {
   PackageProxySchema,
 } from '../package-proxy/schemas/package-proxy.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
+import { Location, LocationSchema } from '../location/schemas/location.schema';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
       { name: IpProxy.name, schema: IpProxySchema },
       { name: PackageProxy.name, schema: PackageProxySchema },
       { name: User.name, schema: UserSchema },
+      { name: Location.name, schema: LocationSchema },
     ]),
   ],
   controllers: [OrderController],
