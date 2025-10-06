@@ -14,6 +14,7 @@ import { PackageProxyModule } from '@/modules/package-proxy/package-proxy.module
 import { IpProxyModule } from '@/modules/ip-proxy/ip-proxy.module';
 import { OrderModule } from './modules/order/order.module';
 import { OrderDetailModule } from './modules/order-detail/order-detail.module';
+import { ProxyStatusModule } from './modules/proxy-status/proxy-status.module';
 
 
 @Module({
@@ -35,6 +36,7 @@ import { OrderDetailModule } from './modules/order-detail/order-detail.module';
     IpProxyModule,
     OrderModule,
     OrderDetailModule,
+    ProxyStatusModule,
   ],
   controllers: [AppController],
   providers: [
