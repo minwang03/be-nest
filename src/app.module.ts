@@ -15,7 +15,7 @@ import { IpProxyModule } from '@/modules/ip-proxy/ip-proxy.module';
 import { OrderModule } from './modules/order/order.module';
 import { OrderDetailModule } from './modules/order-detail/order-detail.module';
 import { ProxyStatusModule } from './modules/proxy-status/proxy-status.module';
-
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -37,6 +37,7 @@ import { ProxyStatusModule } from './modules/proxy-status/proxy-status.module';
     OrderModule,
     OrderDetailModule,
     ProxyStatusModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [
