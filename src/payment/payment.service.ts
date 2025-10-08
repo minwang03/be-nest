@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Payment, PaymentDocument } from './schemas/payment.schema';
 import axios from 'axios';
 import * as crypto from 'crypto';
@@ -17,7 +17,7 @@ export class PaymentService {
     const payment = new this.paymentModel({
       orderId,
       amount,
-      user: userId,
+      user: new Types.ObjectId(userId),
       status: 'pending',
     });
     await payment.save();
