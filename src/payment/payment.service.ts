@@ -27,10 +27,10 @@ export class PaymentService {
   async createPaymentUrl(orderId: string, amount: number, ipAddr: string) {
     const partnerCode = process.env.MOMO_PARTNER_CODE;
     const accessKey = process.env.MOMO_ACCESS_KEY;
-    const secretKey = process.env.MOMO_SECRET_KEY as string;
+    const secretKey = process.env.MOMO_SECRET_KEY!;
     const redirectUrl = process.env.MOMO_REDIRECT_URL;
     const ipnUrl = process.env.MOMO_IPN_URL;
-    const momoAPI = process.env.MOMO_API as string;
+    const momoAPI = process.env.MOMO_API!;
     const requestId = uuidv4();
 
     const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=Nap tien tai khoan&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=captureWallet`;
@@ -62,31 +62,35 @@ export class PaymentService {
     return res.data.payUrl;
   }
 
-  async handleCallback(query: any) {
-    const { orderId, resultCode } = query;
+  async handleCallback(data: any) {
+    try {
+      const { orderId, resultCode, signature, ...rest } = data;
 
-    const status = resultCode === '0' ? 'paid' : 'failed';
+      const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${rest.amount}&extraData=${rest.extraData}&message=${rest.message}&orderId=${orderId}&orderInfo=${rest.orderInfo}&orderType=${rest.orderType}&partnerCode=${rest.partnerCode}&payType=${rest.payType}&requestId=${rest.requestId}&responseTime=${rest.responseTime}&resultCode=${resultCode}&transId=${rest.transId}`;
 
-    const updated = await this.paymentModel.findOneAndUpdate(
-      { orderId },
-      { status, paidAt: new Date() },
-      { new: true },
-    );
+      const checkSignature = crypto
+        .createHmac('sha256', process.env.MOMO_SECRET_KEY!)
+        .update(rawSignature)
+        .digest('hex');
 
-    return updated;
-  }
+      if (checkSignature !== signature) {
+        throw new ForbiddenException('Invalid signature from MoMo');
+      }
 
-  async findOne(orderId: string, userId: string) {
-    const payment = await this.paymentModel.findOne({ orderId });
+      const status = Number(resultCode) === 0 ? 'paid' : 'failed';
 
-    if (!payment) {
-      throw new ForbiddenException('Không tìm thấy giao dịch này.');
+      const updated = await this.paymentModel.findOneAndUpdate(
+        { orderId },
+        { status, paidAt: new Date() },
+        { new: true },
+      );
+
+      if (!updated) {
+        return { message: 'Order not found' };
+      }
+      return { message: 'Success' };
+    } catch (err) {
+      throw err;
     }
-
-    if (payment.user.toString() !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xem giao dịch này.');
-    }
-
-    return payment;
   }
 }
