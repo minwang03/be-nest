@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { JwtAuthGuard } from '@/auth/passport/jwt-auth.guard';
-import type { Response as ExpressResponse } from 'express';
 import { Public } from '@/decorator/customize';
+import express from 'express';
 
 @Controller('payment')
 export class PaymentController {
@@ -38,16 +38,21 @@ export class PaymentController {
 
   @Public()
   @Get('callback')
-  async momoCallbackGet(@Query() query: any) {
+  async momoCallbackGet(@Query() query: any, @Res() res: express.Response) {
     await this.paymentService.handleCallback(query);
-    return {
-      redirectUrl: 'http://localhost:3000/dashboard',
-    };
+    return res.redirect('http://localhost:3000/dashboard');
   }
 
   @Public()
   @Post('ipn')
   async momoIpn(@Body() body: any) {
     return await this.paymentService.handleCallback(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('history')
+  async getPaymentHistory(@Req() req: any) {
+    const userId = req.user.sub;
+    return await this.paymentService.getHistory(userId);
   }
 }

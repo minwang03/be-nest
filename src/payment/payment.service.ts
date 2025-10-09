@@ -101,4 +101,12 @@ export class PaymentService {
       throw err;
     }
   }
+
+  async getHistory(userId: string) {
+    return await this.paymentModel
+      .find({ user: new Types.ObjectId(userId) })
+      .sort({ createdAt: -1 })
+      .select('orderId amount status createdAt paidAt')
+      .lean();
+  }
 }
