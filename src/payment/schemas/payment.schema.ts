@@ -21,6 +21,9 @@ export class Payment {
   @Prop()
   bankCode?: string;
 
+  @Prop()
+  paidAt?: Date;
+
   @Prop({ type: Types.ObjectId, ref: User.name })
   user: Types.ObjectId;
 }
