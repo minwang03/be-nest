@@ -5,11 +5,13 @@ import { Payment, PaymentDocument } from './schemas/payment.schema';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import { User, UserDocument } from '@/modules/users/schemas/user.schema';
 
 @Injectable()
 export class PaymentService {
   constructor(
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
   async create(amount: number, userId: string) {
@@ -79,14 +81,20 @@ export class PaymentService {
 
       const status = Number(resultCode) === 0 ? 'paid' : 'failed';
 
-      const updated = await this.paymentModel.findOneAndUpdate(
+      const payment = await this.paymentModel.findOneAndUpdate(
         { orderId },
         { status, paidAt: new Date() },
         { new: true },
       );
 
-      if (!updated) {
+      if (!payment) {
         return { message: 'Order not found' };
+      }
+
+      if (status === 'paid') {
+        await this.userModel.findByIdAndUpdate(payment.user, {
+          $inc: { balance: payment.amount },
+        });
       }
       return { message: 'Success' };
     } catch (err) {
