@@ -120,9 +120,7 @@ export class PaymentService {
       .digest('hex');
   }
 
-  /**
-   * Xây dựng request body cho MoMo API
-   */
+  // Xây dựng request body cho MoMo API
   private buildPaymentRequestBody(
     orderId: string,
     amount: number,
