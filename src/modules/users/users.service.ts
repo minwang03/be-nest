@@ -18,6 +18,10 @@ export class UsersService {
     private readonly mailService: MailService,
   ) {}
 
+  async findInfo(id: string) {
+    return await this.userModel.findById(id).select('-password').lean();
+  }
+
   async findByEmail(email: string) {
     return await this.userModel.findOne({ email });
   }

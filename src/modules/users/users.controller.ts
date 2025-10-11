@@ -32,18 +32,25 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
-  }
-
   @UseGuards(JwtAuthGuard)
   @Get('info/balance')
   async findBalanceOne(@Req() req: any) {
     const userId = req.user.sub;
     return this.usersService.findBalanceOne(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('info')
+  async findInfo(@Req() req: any) {
+    const userId = req.user.sub;
+    return this.usersService.findInfo(userId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
