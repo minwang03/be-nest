@@ -277,5 +277,9 @@ export class OrderService {
 
     // 6. Đánh dấu IP đã được cấp
     await this.markIpsAsAssigned(availableIps);
+
+    // 7. Cập nhật thời gian thanh toán (paidAt)
+    order.paidAt = new Date();
+    await order.save();
   }
 }

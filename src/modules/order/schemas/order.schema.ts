@@ -22,6 +22,9 @@ export class Order {
   })
   status: string;
 
+  @Prop()
+  paidAt?: Date;
+
   @Prop({ type: Types.ObjectId, ref: User.name })
   user: Types.ObjectId;
 
