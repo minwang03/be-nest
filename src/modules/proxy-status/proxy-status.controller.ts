@@ -12,4 +12,25 @@ export class ProxyStatusController {
     const data = await this.proxyStatusService.getProxyStatus(service);
     return { success: true, data };
   }
+
+  @Public()
+  @Get('summary')
+  async getDashboardSummary() {
+    const summary = await this.proxyStatusService.getDashboardSummary();
+    return { success: true, data: summary };
+  }
+
+  @Public()
+  @Get('recent-orders')
+  async getRecentOrders() {
+    const orders = await this.proxyStatusService.getRecentOrders();
+    return { success: true, data: orders };
+  }
+
+  @Public()
+  @Get('locations')
+  async getProxyLocations() {
+    const data = await this.proxyStatusService.getProxyLocations();
+    return { success: true, data };
+  }
 }

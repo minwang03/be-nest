@@ -1,14 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Location, LocationDocument } from '@/modules/location/schemas/location.schema';
+import {
+  Location,
+  LocationDocument,
+} from '@/modules/location/schemas/location.schema';
+import { User, UserDocument } from '@/modules/users/schemas/user.schema';
+import { Order, OrderDocument } from '@/modules/order/schemas/order.schema';
 
-// Kết quả sẽ là: { [type: string]: Array<{ location: string; packages: Array<{ package: string; service: string; inactiveCount: number }> }> }
 @Injectable()
 export class ProxyStatusService {
   constructor(
     @InjectModel(Location.name)
     private readonly locationModel: Model<LocationDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+    @InjectModel(Order.name)
+    private readonly orderModel: Model<OrderDocument>,
   ) {}
 
   async getProxyStatus(serviceSlug?: string): Promise<Record<string, any[]>> {
@@ -27,8 +35,9 @@ export class ProxyStatusService {
               },
             },
             { $unwind: '$serviceProxy' },
-            // Nếu filter theo 1 slug cụ thể
-            ...(serviceSlug ? [{ $match: { 'serviceProxy.slug': serviceSlug } }] : []),
+            ...(serviceSlug
+              ? [{ $match: { 'serviceProxy.slug': serviceSlug } }]
+              : []),
             {
               $lookup: {
                 from: 'ipproxies',
@@ -40,7 +49,7 @@ export class ProxyStatusService {
                         $and: [
                           { $eq: ['$packageProxy', '$$pkgId'] },
                           { $eq: ['$location', '$$locId'] },
-                          { $eq: ['$isActive', false] }, // đếm inactive
+                          { $eq: ['$isActive', false] },
                         ],
                       },
                     },
@@ -53,7 +62,6 @@ export class ProxyStatusService {
               $project: {
                 name: 1,
                 serviceSlug: '$serviceProxy.slug',
-                // phân loại đơn giản: nếu slug bắt đầu bằng "4g" => 4g, còn lại coi là dân cư
                 type: {
                   $cond: [
                     {
@@ -74,10 +82,8 @@ export class ProxyStatusService {
         },
       },
 
-      // tách packages (vẫn preserve để có location với packages rỗng)
       { $unwind: { path: '$packages', preserveNullAndEmptyArrays: true } },
 
-      // chuẩn hóa
       {
         $project: {
           _id: 0,
@@ -89,7 +95,6 @@ export class ProxyStatusService {
         },
       },
 
-      // nhóm theo type + location: gom packages vào mỗi location
       {
         $group: {
           _id: { type: '$type', location: '$location' },
@@ -103,7 +108,6 @@ export class ProxyStatusService {
         },
       },
 
-      // nhóm theo type: gom các location vào mảng locations
       {
         $group: {
           _id: '$_id.type',
@@ -116,7 +120,6 @@ export class ProxyStatusService {
         },
       },
 
-      // đưa về dạng dễ dùng
       {
         $project: {
           _id: 0,
@@ -130,15 +133,111 @@ export class ProxyStatusService {
 
     const aggResult = await this.locationModel.aggregate(pipeline);
 
-    // chuyển mảng [{ type, locations }] thành object { type: locations }
     const result: Record<string, any[]> = {};
     for (const g of aggResult) {
       result[g.type || 'dancu'] = g.locations || [];
     }
 
-    // đảm bảo luôn có 2 keys (nếu muốn)
     if (!result['4g']) result['4g'] = [];
     if (!result['dancu']) result['dancu'] = [];
+
+    return result;
+  }
+
+  async getDashboardSummary() {
+    const totalUsers = await this.userModel.countDocuments({});
+    const totalOrders = await this.orderModel.countDocuments({});
+    const paidOrders = await this.orderModel.countDocuments({
+      status: 'paid',
+    });
+    const pendingOrders = await this.orderModel.countDocuments({
+      status: 'pending',
+    });
+
+    return {
+      totalUsers,
+      totalOrders,
+      paidOrders,
+      pendingOrders,
+    };
+  }
+
+  async getRecentOrders() {
+    const orders = (await this.orderModel
+      .find({})
+      .sort({ createdAt: -1 })
+      .populate('user', 'username email')
+      .populate({
+        path: 'packageProxy',
+        select: 'name expiry cost serviceProxy',
+        populate: { path: 'serviceProxy', select: 'name type' },
+      })
+      .lean()) as any[];
+
+    return orders.map((order) => ({
+      id: order._id,
+      user: order.user?.username || 'Unknown',
+      email: order.user?.email || '',
+      package: order.packageProxy?.name || 'N/A',
+      service:
+        order.packageProxy?.serviceProxy?.name ||
+        order.packageProxy?.serviceProxy ||
+        'Unknown',
+      status: order.status,
+      total: order.sumcost || 0,
+      quantity: order.quantity || 0,
+      createdAt: order.createdAt,
+    }));
+  }
+
+  async getProxyLocations() {
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'ipproxies',
+          localField: '_id',
+          foreignField: 'location',
+          as: 'proxies',
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          activeCount: {
+            $size: {
+              $filter: {
+                input: '$proxies',
+                as: 'proxy',
+                cond: { $eq: ['$$proxy.isActive', true] },
+              },
+            },
+          },
+          inactiveCount: {
+            $size: {
+              $filter: {
+                input: '$proxies',
+                as: 'proxy',
+                cond: { $eq: ['$$proxy.isActive', false] },
+              },
+            },
+          },
+        },
+      },
+      { $sort: { activeCount: -1 as -1 } },
+    ];
+
+    const locations = await this.locationModel.aggregate(pipeline);
+
+    const totalActive = locations.reduce((acc, l) => acc + l.activeCount, 0);
+
+    const result = locations.map((l) => ({
+      name: l.name,
+      active: l.activeCount,
+      inactive: l.inactiveCount,
+      percentage: totalActive
+        ? Math.round((l.activeCount / totalActive) * 100)
+        : 0,
+    }));
 
     return result;
   }
