@@ -23,6 +23,12 @@ export class OrderController {
     return this.orderService.findAll();
   }
 
+  @Public()
+  @Get('user/:userId')
+  async findByUserId(@Param('userId') userId: string) {
+    return this.orderService.findByUserId(userId);
+  }
+  
   @UseGuards(JwtAuthGuard)
   @Get('user')
   async findOrdersWithDetails(@Req() req: any) {

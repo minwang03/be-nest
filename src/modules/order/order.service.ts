@@ -72,6 +72,12 @@ export class OrderService {
     return `This action returns a #${id} order`;
   }
 
+  async findByUserId(userId: string) {
+    return await this.orderModel
+      .find({ user: new Types.ObjectId(userId) })
+      .exec();
+  }
+
   async findOrdersWithDetails(userId: string) {
     const orders = await this.orderModel
       .find({ user: new Types.ObjectId(userId), status: 'paid' })
