@@ -187,6 +187,7 @@ export class ProxyStatusService {
       total: order.sumcost || 0,
       quantity: order.quantity || 0,
       createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
     }));
   }
 
