@@ -29,7 +29,12 @@ export class IpProxyService {
   }
 
   async findAll() {
-    return await this.ipProxyModel.find().exec();
+    return await this.ipProxyModel
+      .find()
+      .populate('packageProxy', '_id name')
+      .populate('proxyList', '_id name')
+      .populate('location', '_id name')
+      .exec();
   }
 
   async findOne(id: string) {

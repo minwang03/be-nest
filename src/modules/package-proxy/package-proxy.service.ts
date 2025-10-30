@@ -28,7 +28,10 @@ export class PackageProxyService {
   }
 
   async findAll() {
-    return await this.packageProxyModel.find().exec();
+    return await this.packageProxyModel
+      .find()
+      .populate('serviceProxy', '_id slug')
+      .exec();
   }
 
   async findOne(id: string) {
