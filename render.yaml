@@ -7,12 +7,13 @@ services:
 
     buildCommand: |
       npm install
+      npm install -g @nestjs/cli
       npm run build
 
-    startCommand: npm run start:prod
+    startCommand: node dist/main.js
 
     envVars:
       - key: NODE_VERSION
         value: 20.11.1
       - key: NODE_ENV
-        value: production
+        value: development
