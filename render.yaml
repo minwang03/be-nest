@@ -1,7 +1,19 @@
 services:
   - type: web
-    name: nest-backend
+    name: be-nest
     env: node
+    region: singapore
     plan: free
-    buildCommand: "npm install && npm run build"
-    startCommand: "npm start"
+
+    buildCommand: |
+      npm install
+      npm install -g @nestjs/cli
+      npm run build
+
+    startCommand: node dist/main.js
+
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NODE_ENV
+        value: development
