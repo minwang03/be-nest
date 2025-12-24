@@ -40,7 +40,7 @@ export class PaymentController {
   @Get('callback')
   async momoCallbackGet(@Query() query: any, @Res() res: express.Response) {
     await this.paymentService.handleCallback(query);
-    return res.redirect('http://localhost:3000/dashboard');
+    return res.redirect('https://fe-next-drab.vercel.app/dashboard');
   }
 
   @Public()
