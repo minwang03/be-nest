@@ -40,6 +40,6 @@ export class AuthService {
   };
 
   async activateAccount(codeId: string) {
-    return this.usersService.activateAccount(codeId);
+    return await this.usersService.activateAccount(codeId);
   }
 }

@@ -108,10 +108,10 @@ export class UsersService {
     });
 
     //send email
-    if (!user.codeId) {
-      throw new Error('CodeId không tồn tại');
-    }
-    await this.mailService.sendActivationEmail(email, user.codeId);
+    // if (!user.codeId) {
+    //   throw new Error('CodeId không tồn tại');
+    // }
+    // await this.mailService.sendActivationEmail(email, user.codeId);
 
     return {
       message:
