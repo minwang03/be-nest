@@ -6,6 +6,9 @@ export class MailService {
   private transporter;
 
   constructor() {
+    console.log('MAIL_USER =', process.env.MAIL_USER);
+    console.log('MAIL_PASS tồn tại =', !!process.env.MAIL_PASS);
+    
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
