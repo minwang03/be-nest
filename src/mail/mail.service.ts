@@ -35,7 +35,7 @@ export class MailService {
     `;
 
     const result = await this.resend.emails.send({
-      from: 'ProxyHub <onboarding@resend.dev>', 
+      from: 'ProxyHub <no-reply@proxyhub.site>',
       to,
       subject: '🚀 Kích hoạt tài khoản ProxyHub',
       html: htmlTemplate,
@@ -46,9 +46,7 @@ export class MailService {
       throw new Error(result.error.message);
     }
 
-    this.logger.log(
-      `Activation email sent to ${to} | id=${result.data?.id}`,
-    );
+    this.logger.log(`Activation email sent to ${to} | id=${result.data?.id}`);
 
     return result.data;
   }
