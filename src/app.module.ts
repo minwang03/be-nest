@@ -16,6 +16,7 @@ import { OrderModule } from './modules/order/order.module';
 import { OrderDetailModule } from './modules/order-detail/order-detail.module';
 import { ProxyStatusModule } from './modules/proxy-status/proxy-status.module';
 import { PaymentModule } from './payment/payment.module';
+import { LoginSessionsModule } from './modules/login-sessions/login-sessions.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PaymentModule } from './payment/payment.module';
     OrderDetailModule,
     ProxyStatusModule,
     PaymentModule,
+    LoginSessionsModule,
   ],
   controllers: [AppController],
   providers: [
