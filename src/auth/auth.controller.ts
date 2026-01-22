@@ -12,7 +12,7 @@ export class AuthController {
   @Public()
   @Post('login')
   handleLogin(@Request() req){
-    return this.authService.login(req.user);
+    return this.authService.login(req.user, req);
   }
 
   @Public()
