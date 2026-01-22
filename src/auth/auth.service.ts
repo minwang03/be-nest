@@ -48,6 +48,7 @@ export class AuthService {
 
     return { access_token: accessToken };
   }
+  
   handleRegister = async (registerDto: CreateAuthDto) => {
     return await this.usersService.handleRegister(registerDto);
   };
