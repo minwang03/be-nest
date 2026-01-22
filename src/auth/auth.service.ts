@@ -3,12 +3,20 @@ import { UsersService } from '@/modules/users/users.service';
 import { comparePasswordHelper } from '@/helper/util';
 import { JwtService } from '@nestjs/jwt';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
+import { LoginSession } from '@/modules/login-sessions/schemas/login-session.schema';
+import { HydratedDocument, Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Request } from 'express';
+
+type LoginSessionDocument = HydratedDocument<LoginSession>;
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    @InjectModel(LoginSession.name)
+    private loginSessionModel: Model<LoginSessionDocument>,
   ) {}
 
   async validateUser(username: string, password: string) {
@@ -22,7 +30,7 @@ export class AuthService {
     return user;
   }
 
-  async login(user: any) {
+  async login(user: any, req: Request) {
     const payload = {
       sub: user._id,
       role: user.role,
@@ -30,9 +38,20 @@ export class AuthService {
       email: user.email,
       isActive: user.isActive,
     };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: '7d',
+    });
+
+    await this.loginSessionModel.create({
+      userId: user._id,
+      accessToken,
+      expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    return { access_token: accessToken };
   }
 
   handleRegister = async (registerDto: CreateAuthDto) => {
