@@ -3,20 +3,15 @@ import { UsersService } from '@/modules/users/users.service';
 import { comparePasswordHelper } from '@/helper/util';
 import { JwtService } from '@nestjs/jwt';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
-import { LoginSession } from '@/modules/login-sessions/schemas/login-session.schema';
-import { HydratedDocument, Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
 import { Request } from 'express';
-
-type LoginSessionDocument = HydratedDocument<LoginSession>;
+import { LoginSessionsService } from '@/modules/login-sessions/login-sessions.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    @InjectModel(LoginSession.name)
-    private loginSessionModel: Model<LoginSessionDocument>,
+    private loginSessionsService: LoginSessionsService,
   ) {}
 
   async validateUser(username: string, password: string) {
@@ -43,7 +38,7 @@ export class AuthService {
       expiresIn: '7d',
     });
 
-    await this.loginSessionModel.create({
+    await this.loginSessionsService.createSession({
       userId: user._id,
       accessToken,
       expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -53,7 +48,6 @@ export class AuthService {
 
     return { access_token: accessToken };
   }
-
   handleRegister = async (registerDto: CreateAuthDto) => {
     return await this.usersService.handleRegister(registerDto);
   };
