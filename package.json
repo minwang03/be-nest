@@ -36,6 +36,7 @@
     "dayjs": "^1.11.18",
     "mongoose": "^8.18.1",
     "nodemailer": "^7.0.6",
+    "openai": "^6.17.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

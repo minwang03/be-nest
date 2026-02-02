@@ -17,6 +17,7 @@ import { OrderDetailModule } from './modules/order-detail/order-detail.module';
 import { ProxyStatusModule } from './modules/proxy-status/proxy-status.module';
 import { PaymentModule } from './payment/payment.module';
 import { LoginSessionsModule } from './modules/login-sessions/login-sessions.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { LoginSessionsModule } from './modules/login-sessions/login-sessions.mod
     ProxyStatusModule,
     PaymentModule,
     LoginSessionsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
